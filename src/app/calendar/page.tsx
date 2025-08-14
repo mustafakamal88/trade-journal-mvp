@@ -148,3 +148,5 @@ function useWeeklySummary(rows: DayAgg[]) {
       ...w,
       weekOfMonth: w.weekStart.isoWeek() - w.weekStart.startOf("month").isoWeek() + 1,
     }));
+  }, [rows]);
+}

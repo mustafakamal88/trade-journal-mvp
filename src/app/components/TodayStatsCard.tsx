@@ -3,12 +3,16 @@
 import useSWR from 'swr';
 import { Card, Statistic } from 'antd';
 
+type Stats = { pnl: number; trades: number; rr: number };
+
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-export default function TodayStatsCard() {
-  const { data = { pnl: 0, trades: 0, rr: 0 } } = useSWR('/api/stats/today', fetcher, {
-    refreshInterval: 15000,
-  });
+export default function TodayStatsCard({ initial }: { initial?: Stats }) {
+  const { data = { pnl: 0, trades: 0, rr: 0 } } = useSWR<Stats>(
+    '/api/stats/today',
+    fetcher,
+    { refreshInterval: 15000, fallbackData: initial }
+  );
 
   return (
     <Card className="shadow-md rounded-lg w-full max-w-md">
