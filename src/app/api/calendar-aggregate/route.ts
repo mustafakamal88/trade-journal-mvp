@@ -9,34 +9,41 @@ export async function GET() {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true },
+  });
+  if (!user) return NextResponse.json([], { status: 200 });
+
   const trades = await prisma.trade.findMany({
-    where: { userId: user!.id, closedAt: { not: null } },
-    select: { realizedPnl: true, closedAt: true }
+    where: { userId: user.id, closedAt: { not: null } },
+    select: { realizedPnl: true, closedAt: true },
+    orderBy: { closedAt: "asc" },
   });
 
-  // Aggregate P&L per day (YYYY-MM-DD)
+  // P&L per day (YYYY-MM-DD)
   const byDay = new Map<string, number>();
   for (const t of trades) {
     const d = (t.closedAt as Date).toISOString().slice(0, 10);
     byDay.set(d, (byDay.get(d) ?? 0) + Number(t.realizedPnl ?? 0));
   }
 
-  // Build a sorted array of days
+  // Sorted days
   const days = Array.from(byDay.entries())
     .map(([date, pnl]) => ({ date, pnl }))
     .sort((a, b) => (a.date < b.date ? -1 : 1));
 
-  // Running balance
+  // Running balance (from env or default)
   const startBalance = Number(process.env.START_BALANCE ?? 10000);
   let balance = startBalance;
+
   const result = days.map((d) => {
     balance += d.pnl;
     return {
       date: d.date,
-      pnl: d.pnl,
-      balance,          // <— running balance up to this date
-      win: d.pnl >= 0
+      pnl: Number(d.pnl.toFixed(2)),
+      balance: Number(balance.toFixed(2)),
+      win: d.pnl >= 0,
     };
   });
 
