@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Calendar, Tooltip, message, Skeleton } from "antd";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
-import isoWeek from "dayjs/plugin/isoWeek"; // gives startOf('isoWeek')
+import isoWeek from "dayjs/plugin/isoWeek";
 import clsx from "clsx";
 
 dayjs.extend(isoWeek);
@@ -144,7 +144,19 @@ function useWeeklySummary(rows: DayAgg[]) {
     const arr = [...byWeek.values()].sort(
       (a, b) => a.weekStart.valueOf() - b.weekStart.valueOf()
     );
-    return arr.map((w) => ({
-      ...w,
-      weekOfMonth: w.weekStart.isoWeek() - w.weekStart.startOf("month").isoWeek() + 1,
-    }));
+
+    // simple "Week 1..6 of month" calculation
+    return arr.map((w) => {
+      const firstOfMonth = w.weekStart.startOf("month");
+      const offsetDays = w.weekStart.diff(firstOfMonth, "day");
+      const weekOfMonth = Math.floor(offsetDays / 7) + 1; // 1..6
+      return {
+        key: w.key,
+        weekStart: w.weekStart,
+        weekOfMonth,
+        pnl: Number(w.pnl.toFixed(2)),
+        days: w.days,
+      };
+    });
+  }, [rows]);
+}

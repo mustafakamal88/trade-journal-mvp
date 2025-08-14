@@ -17,17 +17,27 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "baseUrl": ".",
     "paths": {
       "@/*": [
-        "./src/*"
+        "src/*"
       ]
-    },
+    }, // <- OBJECT, not array
+    "types": [
+      "node"
+    ] // <- DO NOT put "bcryptjs" here
+    ,
     "plugins": [
       {
         "name": "next"
       }
     ]
   },
+  "plugins": [
+    {
+      "name": "next"
+    }
+  ],
   "include": [
     "next-env.d.ts",
     "**/*.ts",
@@ -38,4 +48,3 @@
     "node_modules"
   ]
 }
-
